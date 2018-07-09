@@ -1,7 +1,7 @@
 import os
 import sys
 path = os.path.realpath('') + '/scripts/'
-sys.path.applicationend(path)
+sys.path.append(path)
 path2=os.path.realpath('') 
 import time
 import numpy as np
@@ -68,9 +68,9 @@ dfReply= df2[df2['Action']=='reply']
 def f(x):
      return Series(dict(Number_of_tweets = x['T1text1'].count(),))
 
-tweet = dfTweet.groupby(dfTweet.index.date).applicationly(f)
-reply = dfReply.groupby(dfReply.index.date).applicationly(f)
-retweet = dfRetweet.groupby(dfRetweet.index.date).applicationly(f)
+tweet = dfTweet.groupby(dfTweet.index.date).apply(f)
+reply = dfReply.groupby(dfReply.index.date).apply(f)
+retweet = dfRetweet.groupby(dfRetweet.index.date).apply(f)
 
 
 #=================================
@@ -83,13 +83,13 @@ application.config['CELERY_RESULT_BACKEND'] = 'redis://localhost:6379/0'
 application.config['SOCKETIO_REDIS_URL'] = 'redis://localhost:6379/0'
 application.config['BROKER_TRANSPORT'] = 'redis'
 application.config['CELERY_ACCEPT_CONTENT'] = ['pickle']
-application.config['CELERY_ACCEPT_CONTENT'] = ['json','applicationlication/text']
+application.config['CELERY_ACCEPT_CONTENT'] = ['json','application/text']
 application.config['CELERY_ACCEPT_CONTENT'] = ['json']
 application.config['CELERY_TASK_SERIALIZER'] = 'json'
 application.config['CELERY_RESULT_SERIALIZER'] = 'json'
 
 registry.enable('json')
-registry.enable('applicationlication/text')
+registry.enable('application/text')
 
 # Initialize SocketIO
 socketio = SocketIO(application, message_queue=application.config['SOCKETIO_REDIS_URL'])
@@ -114,7 +114,7 @@ def getTopNhashtags(n,df) :
 		   list2=i.split("_")
 		   for j in list2 : 
 			if j!="" :                #  My_list = My_list+list2         #ADD two list
-			   My_list.applicationend(j)
+			   My_list.append(j)
 	count = Counter()
 	for word in My_list:
 	    count[word] += 1
@@ -148,8 +148,8 @@ def create_stream(phrase, queue):
 	    tags =[]
 	    values=[]
 	    for word, count in tweetHashtags:
-		    tags.applicationend(word)
-		    values.applicationend(count)
+		    tags.append(word)
+		    values.append(count)
 	    tags1 =  convertTostr(tags)
 	    values1 = convertTostr(values)
 	    local.emit('tweetHashtags',{'tags':tags1,'count':values1}) 
@@ -197,15 +197,15 @@ def index():
     """
     return render_template('index.html')
     
-#@application.route('/hashtags/<ntags>', methods=['POST'])
+#@app.route('/hashtags/<ntags>', methods=['POST'])
 def hashtags(ntags):
     """
     Route that accepts a twitter search phrase and queues a task to initiate
     a connection to twitter.
     """
     queue = application.config['SOCKETIO_REDIS_URL']
-    # create_stream.applicationly_async(args=[phrase, queue])
-    chain(create_stream2.s(ntags, queue), send_complete_message.s()).applicationly_async()
+    # create_stream.apply_async(args=[phrase, queue])
+    chain(create_stream2.s(ntags, queue), send_complete_message.s()).apply_async()
     return 'Establishing connection...'
 
 @application.route('/twitter/<phrase>', methods=['POST'])
@@ -215,8 +215,8 @@ def twitter(phrase):
     a connection to twitter.
     """
     queue = application.config['SOCKETIO_REDIS_URL']
-    # create_stream.applicationly_async(args=[phrase, queue])
-    chain(create_stream.s(phrase, queue), send_complete_message.s()).applicationly_async()
+    # create_stream.apply_async(args=[phrase, queue])
+    chain(create_stream.s(phrase, queue), send_complete_message.s()).apply_async()
     return 'Establishing connection...'
 
 
