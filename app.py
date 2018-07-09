@@ -41,10 +41,7 @@ from kombu import Exchange, Queue
 from kombu.serialization import registry
 
 #Twitter API keys
-consumer_key = 'htZSZ9qcZunfCHgdMRxKFtdi1'
-consumer_secret = 'pOnvvaneN1v2oXixbz4qvO5JxYuPedN8uPgUEc7HHr4p9ePGJk'
-access_token = '742375470138789889-UYmR4G5pp0s2EY2nMvw1X8UEa8myndE'
-access_secret = '4gkvkqHYUOKyX6u8AVLlgSE4h7b48Wv0iGo4Kv2TpZJNB'
+
 
 #Twitter only allows access to a users most recent 3240 tweets with this method
 #authorize twitter, initialize tweepy
