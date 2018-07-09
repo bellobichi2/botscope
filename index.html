@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang=en">
+    <head>
+        <meta charset='utf-8'>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta http-equiv="Content-Language" content="en">
+
+        <title>Twitter Bot Visualization Demo</title>
+
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap-theme.min.css">
+        <link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.3/nv.d3.min.css">
+
+        <style>
+            body {
+                background: #f5f5f5;
+                padding-top: 50px;
+            }
+
+            .width-100 {
+                width: 100%;
+            }
+
+            .fixed-height-600 {
+                min-height: 600px;
+                max-height: 600px;
+                overflow-y: scroll;
+            }
+
+            .chart svg {
+                height: 600px;
+                width: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+            </div>
+            <div id="navbar" class="collapse navbar-collapse">
+              <ul class="nav navbar-nav">
+                <li class="active"><a href="#">Home</a></li>
+                <li><a href="">Basic Analysis</a></li>
+	 <li><a href="">Advance Analysis</a></li>
+              </ul>
+            </div>
+          </div>
+        </nav>
+
+        <div class="container width-100">
+            <h1>Twitter Bot Visualization Demo</h1>
+
+            <p class="lead">Twitter search phrase: <input type="text" id="phrase" name="phrase"></p>
+            <button id="begin" class="btn btn-default">Begin Twitter Search</button>
+
+            <br /><br />
+
+            <p id="twitter-status" class="lead"></p>
+
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="chart" id="chart">
+                        <svg></svg>
+                    </div>
+	      <div class="chart" id="chart1">
+                        <svg></svg>
+                    </div>
+	<p class="lead">Get N Top hashtags : <input type="text" id="ntags" name="ntags"></p>
+             <button id="hashtags" class="btn btn-default">Get Hashtags</button>
+                    <div class="chart" id="chart1">
+                        <svg></svg>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div id="twitter-results" class="lead fixed-height-600"></div>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.5/socket.io.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.16/d3.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.8.3/nv.d3.min.js"></script>
+        <script>
+            //var data = [{key: 'Negative', values: []}, {key: 'Positive', values: []}];
+	    var tweet =[],reply=[],retweet=[];
+	    var yValues =[];
+	     var xValues=[];
+	     var resultFile =[];
+           // var myData = getData();
+             function loadGraph() {
+              
+		var chart = nv.models.lineChart();
+				
+				
+                     
+			//chart.xAxis.tickFormat(d3.format(',f'));
+			chart.xAxis
+			       .axisLabel('Date')
+			       .rotateLabels(-30)
+			       .tickFormat(function(d) { return d3.time.format('%d. %B, %Y')(new Date(d)); });
+			chart.yAxis.tickFormat(d3.format(',.2f'));
+			chart.y2Axis.tickFormat(d3.format(',.2f'));
+
+		  d3.select('#chart svg')
+		      .datum(resultFile)
+		      .transition().duration(500)
+		      .call(chart);
+                 
+		  nv.utils.windowResize(chart.update);
+
+		  return chart;
+		}
+            function twitter() {
+                phrase = $('#phrase').val();
+                url = encodeURI('/twitter/' + phrase);
+
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    success: function(data, status, request) {
+                        $('#twitter-status').html(data);
+                    },
+                    error: function() {
+                        alert('An error occurred submitting the request.');
+                    }
+                });
+            }
+	     function hashtags() {
+                ntags = $('#ntags').val();
+                url = encodeURI('/hashtags/' + ntags);
+
+                $.ajax({
+                    type: 'POST',
+                    url: url,
+                    success: function(data, status, request) {
+                        $('#twitter-status').html(data);
+                    },
+                    error: function() {
+                        alert('An error occurred submitting the request.');
+                    }
+                });
+            }
+
+            $(function() {
+                var socket = io.connect('http://' + document.domain + ':' + location.port);
+               socket.on('hello', function(msg) {
+		 $('#phrase').val('');
+
+                    $('#twitter-status').html(msg.data1);
+			  });
+
+		
+			  
+	       socket.on('tweet', function(msg) {
+		         yValues= msg.tweet.split(",");
+			 xValues=msg.date.split(",");
+			  for (var i = 0; i < yValues.length; i++) {
+					var Y = parseInt(yValues[i]);
+					var x = xValues[i];
+					var parts =x.split('-');
+					var mydate = new Date(parts[0], parts[1] - 1, parts[2]); 
+					tweet.push({x: new Date(mydate), y: Y });
+			   }
+			   //add record....you can used the same format for tweet and reply
+			    resultFile.push({values:tweet,key:'tweet',color: '#2ca02c'});
+			   nv.addGraph(loadGraph);
+                    $('#twitter-status').html(msg.tweet);
+			  });
+			  
+	         socket.on('retweet', function(msg) {
+		         yValues= msg.tweet.split(",");
+			 xValues=msg.date.split(",");
+			  for (var i = 0; i < yValues.length; i++) {
+					var Y = parseInt(yValues[i]);
+					var x = xValues[i];
+					var parts =x.split('-');
+					var mydate = new Date(parts[0], parts[1] - 1, parts[2]); 
+					retweet.push({x: new Date(mydate), y: Y });
+			   }
+			   //add record....you can used the same format for tweet and reply
+			    resultFile.push({values:retweet,key:'retweet',color: '#7777ff'});
+			nv.addGraph(loadGraph);
+                    $('#twitter-status').html(msg.tweet);
+			  });
+			  
+                socket.on('reply', function(msg) {
+		         yValues= msg.tweet.split(",");
+			 xValues=msg.date.split(",");
+			  for (var i = 0; i < yValues.length; i++) {
+					var Y = parseInt(yValues[i]);
+					var x = xValues[i];
+					var parts =x.split('-');
+					var mydate = new Date(parts[0], parts[1] - 1, parts[2]); 
+					reply.push({x: new Date(mydate), y: Y });
+			   }
+			   //add record....you can used the same format for tweet and reply
+			    resultFile.push({values:reply,key:'reply', color: '#ff7f0e'});
+			   nv.addGraph(loadGraph);
+			  nv.addGraph(barGraph2);
+                    $('#twitter-status').html(msg.tweet);
+			  });
+
+                socket.on('tweetHashtags', function(msg) {
+                    $('#ntags').val('');
+
+                   nv.addGraph(barGraph);
+                    
+
+                    
+                });
+
+                socket.on('complete', function(msg) {
+                    $('#twitter-status').html(msg.data);
+                });
+		 
+                 
+		
+	    
+	      $('#begin').click(twitter);
+              
+	    //  $('#hashtags').click(hashtags);
+                
+            });
+	    //I am not using this function
+	    function getData(){
+	                         
+	       return[
+	             {
+		      values: retweet,      //values - represents the array of {x,y} data points
+		      key: 'reweet', //key  - the name of the series.
+		      //color: '#ff7f0e'  //color - optional: choose your own line color.
+		    }];
+	       
+	       } 
+////////////////////////////////////
+               data = [
+			  {
+			    "key": "Group A",
+			    
+			    "values": [
+			      { 
+				"label" : "Group A" ,
+				"value" : 25.307646510375
+			      }
+			    ]
+			  },
+			  {
+			    "key": "Group B",
+			    
+			    "values": [
+			      { 
+				"label" : "Group B" ,
+				"value" : 16.756779544553
+			      } 
+			    ]
+			  },
+			  {
+			    "key": "Group C",
+			   
+			    "values": [
+			      
+			      { 
+				"label" : "Group C" ,
+				"value" : 18.451534877007
+			      } 
+			    ]
+			  }
+			  
+			]
+
+              function barGraph2(){
+		  var chart = nv.models.multiBarHorizontalChart()
+				.x(function(d) { return d.label })
+				.y(function(d) { return d.value })
+				.margin({top: 30, right: 20, bottom: 50, left: 175})
+				.showValues(true)           //Show bar value next to each bar.
+				.groupSpacing(0)
+				//.tooltips(true)             //Show tooltips on hover.
+				
+				//.showControls(true);        //Allow user to switch between "Grouped" and "Stacked" mode.
+
+			    chart.yAxis
+				//.tickFormat(d3.format(',.2f'));
+
+			    d3.select('#chart1 svg')
+				.datum(data)
+				.transition().duration(350)
+				.call(chart);
+
+			    nv.utils.windowResize(chart.update);
+
+			    return chart;
+				} 
+
+///////////////////////
+	    function exampleData() {
+			 return  [ 
+			    {
+			      key: "Cumulative Return",
+			      values: [
+				{ 
+				  "label" : "A Label" ,
+				  "value" : 29.765957771107
+				} , 
+				{ 
+				  "label" : "B Label" , 
+				  "value" : 0
+				} , 
+				{ 
+				  "label" : "C Label" , 
+				  "value" : 32.807804682612
+				} , 
+				{ 
+				  "label" : "D Label" , 
+				  "value" : 196.45946739256
+				} , 
+				{ 
+				  "label" : "E Label" ,
+				  "value" : 0.19434030906893
+				} , 
+				{ 
+				  "label" : "F Label" , 
+				  "value" : 98.079782601442
+				} , 
+				{ 
+				  "label" : "G Label" , 
+				  "value" : 13.925743130903
+				} , 
+				{ 
+				  "label" : "H Label" , 
+				  "value" : 5.1387322875705
+				}
+			      ]
+			    }
+			  ]
+
+			}
+
+
+			function barGraph() {
+			  var chart = nv.models.discreteBarChart()
+			    .x(function(d) { return d.label })
+			    .y(function(d) { return d.value })
+			    .staggerLabels(true)
+			    .showValues(true)
+
+			  chart.tooltip.enabled();
+			  //chart.xAxis
+			  //     .axisLabelDistance(50)
+			       //.staggerLabels(true);
+			  chart.yAxis
+			    //    .tickFormat(d3.format(',.1f'))
+			      .axisLabelDistance(50)
+
+			  d3.select('#chart1 svg')
+			    .datum(exampleData())
+			    .transition().duration(350)
+			    .call(chart)
+			    ;
+
+			  nv.utils.windowResize(chart.update);
+
+			  return chart;
+			}
+	      
+	    
+        </script>
+    </body>
+</html>
