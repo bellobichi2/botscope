@@ -43,7 +43,7 @@ from kombu.serialization import registry
 #Twitter API keys
 
 
-#Twitter only allows access to a users most recent 3240 tweets with this method
+#Twitter only allows access to a users most recent 3240 
 #authorize twitter, initialize tweepy
 auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
 auth.set_access_token(access_token, access_secret)
