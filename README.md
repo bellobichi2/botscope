@@ -1,6 +1,6 @@
 Botscope : A tool for Reverse Engineering the Behaviour of Twitter Bots
 https://ieeexplore.ieee.org/abstract/document/8554675
-
+Note: New public URL for the application will be available soon. The Service below is online available to wired connected systems at the University of Leicester,UK
 http://tomcat.mcs.le.ac.uk:5000/rulelearning
 
 To cite this work:
