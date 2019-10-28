@@ -1,4 +1,4 @@
-Botscope : A tool for Analyzing the behaviour of Twitter bots based on  
+Botscope: A tool for Analyzing the behaviour of Twitter bots based on  
 
 
 An approach for Reverse Engineering the Behaviour of Twitter Bots
