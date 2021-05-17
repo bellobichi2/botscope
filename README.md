@@ -3,7 +3,7 @@ This is tool is based on an approach proposed for Reverse Engineering the Behavi
 https://ieeexplore.ieee.org/abstract/document/8554675
 
 # Setup Instructions
-* Clone this repository:(https://github.com/bellobichi2/botscope2.git)   from   https://github.com/bellobichi2/botscope2
+* Clone this repository:(https://github.com/bellobichi2/botscope2.git)  
 * Install dependencies (app_requirements.txt)
 * Open a terminal window and start a Redis server  (type: 'redis-server')
 * Open another terminal window and start a Celery worker (type: 'celery worker -A app.celery --loglevel=info')
